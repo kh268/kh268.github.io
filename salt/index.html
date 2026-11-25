@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Guest Messaging at The Salt Collections | Quang Kien Han</title>
+<link rel="canonical" href="https://kh268.github.io/salt/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI Guest Messaging at The Salt Collections">
+<meta property="og:description" content="How a two-person team automated about 80% of guest replies for a hospitality company in Da Nang, and built the tool staff use to keep it running. Case study by Quang Kien Han.">
+<meta property="og:url" content="https://kh268.github.io/salt/">
+<meta name="description" content="How a two-person team automated about 80% of guest replies for a hospitality company in Da Nang, and built the tool staff use to keep it running. Case study by Quang Kien Han.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE a one-page case study for busy readers: the story in a minute, the engineering on demand
+   IDEA a boutique-hotel landing page: calm sand and white bands, one deep brown band for the results
+   PICTURE the 80/20 river of guest messages in the hero; a six-step retrieval chain; tabbed real cases; a walk-through
+   COLOUR Salt Knowledge Hub palette: white, sand #fbf6f1, ink #1f1b17, muted #4f453f, taupe #a68d77, brown #664f40 / #4d382a
+   TYPE Manrope only: 800 for big titles, 18px body
+   LAYOUT slim sticky top bar; centred 1120px content; sections stack to one column under 900px */
+:root{color-scheme:light;--bg:#ffffff;--sand:#fbf6f1;--ink:#1f1b17;--mute:#4f453f;--soft:#776b64;--line:#e4ddd6;--line2:#d2c4bc;--active:#efe7e0;--gold:#a68d77;--btn:#664f40;--deep:#4d382a;--shadow:0 2px 14px rgba(41,37,33,.06)}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:80px;scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.7 Manrope,ui-sans-serif,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+a{color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:clamp(42px,6vw,76px);line-height:1;font-weight:800;letter-spacing:-.045em}
+h2{font-size:clamp(32px,4vw,50px);line-height:1.06;font-weight:800;letter-spacing:-.035em}
+h3{font-size:20px;line-height:1.3;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+p{margin:0 0 16px;max-width:66ch}
+b,strong{font-weight:700}
+.ic{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+nav.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;gap:20px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:17px;white-space:nowrap;flex:none}
+.logo i{width:26px;height:26px;background:var(--gold);display:block}
+.links{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+.links a{text-decoration:none;font-size:15.5px;font-weight:600;color:var(--mute);padding:8px 12px;border-radius:8px;white-space:nowrap}
+.links a:hover{background:var(--sand);color:var(--ink)}
+.b1,.b2{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 22px;border-radius:12px;font:700 16px Manrope,sans-serif;text-decoration:none;white-space:nowrap;cursor:pointer}
+.b1{background:var(--btn);color:#fff;border:1px solid var(--btn)}
+.b1:hover{background:var(--deep)}
+.b2{border:1px solid var(--line2);background:var(--bg);color:var(--ink)}
+.b2:hover{border-color:var(--btn)}
+.b1.sm{min-height:42px;padding:0 16px;font-size:15px;flex:none}
+.b1 .ic,.b2 .ic{width:18px;height:18px}
+section{padding:clamp(64px,8vw,112px) 0}
+.sand{background:var(--sand)}
+.eyebrow{font-size:15px;font-weight:700;color:var(--btn);margin:0 0 14px}
+.sh{max-width:760px;margin-bottom:clamp(30px,4vw,48px)}
+.sh p{font-size:clamp(18px,1.6vw,20.5px);color:var(--mute);margin:16px 0 0}
+.sh .eyebrow{font-size:15px;color:var(--btn);margin:0 0 14px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.hero{padding:clamp(56px,7vw,96px) 0 clamp(48px,6vw,80px);background:linear-gradient(var(--sand),var(--bg))}
+.hero .lead{font-size:clamp(19px,1.8vw,22px);line-height:1.6;color:var(--mute);max-width:56ch;margin:26px 0 0}
+.acts{display:flex;flex-wrap:wrap;gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:clamp(40px,5vw,64px) 0 18px}
+.kpi{padding:20px 22px}
+.kpi b{display:block;font-size:clamp(34px,3.6vw,46px);font-weight:800;letter-spacing:-.04em;line-height:1.1;white-space:nowrap}
+.kpi span{display:block;font-size:15.5px;color:var(--mute);margin-top:4px;line-height:1.45}
+.flow{padding:24px clamp(16px,2.4vw,30px) 20px}
+.flowh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 20px;margin-bottom:16px}
+.flowh b{font-size:18px}
+.flowh span{font-size:15px;color:var(--soft)}
+.fig{position:relative;min-height:300px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+svg text{font-family:Manrope,ui-sans-serif,sans-serif}
+.rv{fill:var(--active)}.sf{fill:var(--btn)}.dt{fill:var(--gold)}
+.ln{stroke:var(--line2);fill:none}
+.gate{stroke:var(--bg);stroke-width:3}
+.chx{font-size:14px;font-weight:600;fill:var(--mute)}
+.st{font-size:15px;font-weight:700;fill:var(--ink)}
+.stv{font-size:16px;font-weight:600;fill:var(--ink)}
+.kh{font-size:15px;font-weight:700;fill:var(--ink)}
+.khb{fill:var(--bg);stroke:var(--line2);stroke-width:1.5}
+.sm{font-size:15px;font-weight:500;fill:var(--mute)}
+.big{font-size:36px;font-weight:800;letter-spacing:-.03em;fill:var(--ink)}
+.big2{font-size:30px;font-weight:800;letter-spacing:-.03em;fill:var(--btn)}
+.sm,.big,.big2,.kh,.stv{paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.mkr{fill:var(--line2)}.mks{fill:var(--btn)}
+.lp{stroke:var(--btn);fill:none;stroke-width:1.5;stroke-dasharray:5 5}
+.up{stroke:var(--line2);stroke-width:1.5}
+.cap{font-size:16px;color:var(--soft);margin:14px 0 0}
+.facts{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:22px;font-size:16px;color:var(--mute)}
+.facts b{color:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,4vw,64px);align-items:center}
+.pains{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:14px}
+.pains li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 14px;font-size:17.5px;color:var(--mute)}
+.pains .ic{color:var(--btn);margin-top:4px}
+.pains b{color:var(--ink)}
+.queue{overflow:hidden;font-size:16px}
+.qh{display:flex;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700}
+.qh span{font-weight:500;color:var(--soft)}
+.q{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:4px 12px;padding:12px 18px;border-bottom:1px solid var(--line);align-items:baseline}
+.q:last-child{border-bottom:0}
+.q time{color:var(--soft);font-variant-numeric:tabular-nums}
+.q .src{font-size:14px;color:var(--soft);white-space:nowrap}
+.q.urg{background:var(--sand);box-shadow:inset 3px 0 var(--btn)}
+.q.urg b{grid-column:3;color:var(--btn);font-size:15px}
+.note{font-size:15px;color:var(--soft);margin-top:12px}
+.dials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:40px}
+.dial{padding:24px 26px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:12px;background:var(--active);margin:8px 0 14px}
+.seg button{font:700 15px Manrope,sans-serif;min-height:42px;padding:0 16px;border-radius:9px;border:0;background:transparent;color:var(--mute);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--bg);color:var(--ink);box-shadow:0 1px 4px rgba(41,37,33,.12)}
+.dial .dv{margin:0;font-size:17px;color:var(--mute);min-height:3.4em}
+.dial .dv b{color:var(--ink)}
+.read{max-width:780px}
+.story p{font-size:18px;color:var(--mute);margin:0 0 14px}
+.story p:last-child{margin-bottom:0}
+.story b{color:var(--ink)}
+.two .story{margin-top:22px}
+.crit{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px 32px;padding:26px 28px;margin-bottom:16px}
+.ck b{display:block;font-size:20px;line-height:1.3;margin-bottom:4px}
+.ck small{font-size:15px;font-weight:700;color:var(--btn)}
+.sum{padding:24px 28px;border-left:4px solid var(--gold);margin-top:22px}
+.sum p{margin:0;font-size:18px;color:var(--mute)}
+.sum b{color:var(--ink)}
+.flowtxt{list-style:none;margin:28px 0 0;padding:0;counter-reset:f}
+.flowtxt li{counter-increment:f;position:relative;padding:16px 0 16px 54px;border-top:1px solid var(--line);font-size:18px;color:var(--mute)}
+.flowtxt li:last-child{border-bottom:1px solid var(--line)}
+.flowtxt li::before{content:counter(f);position:absolute;left:0;top:15px;width:34px;height:34px;border-radius:50%;background:var(--active);color:var(--deep);font-weight:800;font-size:15px;display:grid;place-items:center}
+.flowtxt b{color:var(--ink);font-weight:600}
+.walk1{margin-top:clamp(32px,4vw,48px);max-width:820px}
+.qask{max-width:520px;margin:28px 0 14px}
+.qask .say{margin:0;font-size:17px}
+.after{margin:18px 0 0;font-size:17px;color:var(--mute)}
+.after b{color:var(--ink)}
+.wftbl td{white-space:normal!important;vertical-align:top}
+.wftbl td:first-child{width:34%;font-weight:400}
+.wftbl td:first-child .say{margin:0}
+.wftbl td:last-child b{display:block;color:var(--ink);font-weight:600}
+.walk2{margin-top:clamp(32px,4vw,48px)}
+.walk2 h3{margin:0 0 6px}
+@media(max-width:640px){table.wftbl td:first-child,table.crittbl td:first-child,table.crittbl td:nth-child(2){width:auto}.wftbl td .say{display:flow-root}}
+.hubfig{margin:32px 0 22px}
+.hubfig h3{margin:0 0 14px}
+.mock{border:1px solid var(--line2);border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 14px 40px rgba(77,56,42,.10);font-size:14.5px;line-height:1.5;color:var(--ink);pointer-events:none;user-select:none}
+.m-top{display:flex;align-items:center;gap:18px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.m-top b{font-size:15px;white-space:nowrap}
+.m-tabs{display:flex;gap:6px;flex:1;min-width:0;overflow:hidden}
+.m-tabs span{padding:5px 11px;border-radius:8px;color:var(--soft);white-space:nowrap}
+.m-tabs .on{background:var(--active);color:var(--deep);font-weight:600}
+.m-user{color:var(--soft);font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:3px 11px;white-space:nowrap}
+.m-body{display:grid;grid-template-columns:290px minmax(0,1fr)}
+.m-list{border-right:1px solid var(--line);padding:14px;background:var(--sand)}
+.m-search{border:1px solid var(--line);border-radius:9px;padding:8px 11px;color:var(--soft);background:#fff;margin-bottom:10px}
+.m-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 11px;border-radius:9px}
+.m-row.on{background:#fff;box-shadow:0 0 0 1px var(--line2)}
+.chip{font-style:normal;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.chip.draft{border:1px solid var(--gold);color:var(--btn)}
+.chip.pub{background:var(--active);color:var(--deep)}
+.m-edit{padding:18px 22px 20px}
+.m-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:4px}
+.m-h b{font-size:17px}
+.m-h span{color:var(--soft);font-size:13.5px}
+.m-lab{font-size:12.5px;font-weight:600;color:var(--soft);margin:12px 0 6px}
+.m-field{border:1px solid var(--line2);border-radius:10px;padding:11px 13px;position:relative}
+.m-field mark{background:#f8e6e0;color:inherit;border-bottom:2px solid #b4533a;padding:0 2px}
+.m-tags{display:flex;gap:8px;flex-wrap:wrap}
+.m-tags span{border:1px solid var(--line2);border-radius:8px;padding:4px 10px;font-size:13.5px}
+.m-warn{margin-top:12px;padding:10px 13px;border-radius:10px;background:#fbefec;color:#8c3b2a;font-size:13.5px;position:relative}
+.m-btns{display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:16px;position:relative}
+.m-btns span{padding:8px 16px;border-radius:9px;font-weight:600;font-size:14px}
+.m-btns .b2{border:1px solid var(--line2)}
+.m-btns .b1{background:var(--btn);color:#fff;opacity:.45}
+.m-btns small{color:var(--soft);font-size:12.5px;margin-right:auto}
+.mk{position:absolute;top:-11px;right:-11px;width:24px;height:24px;border-radius:50%;background:var(--deep);color:#fff;font-size:12.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 3px #fff}
+@media(max-width:700px){.m-body{grid-template-columns:minmax(0,1fr)}.m-list{border-right:0;border-bottom:1px solid var(--line)}.m-row:nth-of-type(n+4){display:none}.m-user,.m-tabs span:not(.on){display:none}.m-edit{padding:16px}}
+.walk2 .lede{margin:0 0 10px;color:var(--mute);font-size:16.5px;max-width:780px}
+.sub{margin:clamp(34px,4.5vw,48px) 0 14px}
+.sh+.sub{margin-top:0}
+.axn{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--active);color:var(--deep);font-weight:800;font-size:15px;margin-bottom:12px}
+.decide3{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.decide3 li{padding:22px 22px 24px}
+.q3{font-size:18px;font-weight:700;color:var(--ink);margin:0 0 10px}
+.a3{font-size:16.5px;color:var(--mute);margin:0}
+.a3 b{color:var(--btn)}
+.no3{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:14.5px;font-weight:700;color:var(--soft)}
+.sw2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.sw2 div{padding:22px 24px}
+.sw2 b{display:block;font-size:18px;margin-bottom:6px}
+.sw2 p{margin:0;font-size:16.5px;color:var(--mute)}
+.why6{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.why6 div{padding:22px 22px 24px}
+.wq{display:block;font-size:18px;margin-bottom:6px}
+.wh{font-size:15px;font-weight:700;color:var(--btn);margin:0 0 10px}
+.why6 p:last-child{margin:0;font-size:16.5px;color:var(--mute)}
+.tblwrap{padding:6px 24px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 16px;border-radius:999px;border:1px solid var(--line2);background:var(--bg);font:700 15.5px Manrope,sans-serif;color:var(--mute);cursor:pointer;white-space:nowrap}
+.tab em{font-style:normal;font-size:13px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--active);color:var(--deep)}
+.tab:hover{border-color:var(--btn)}
+.tab[aria-selected=true]{background:var(--btn);border-color:var(--btn);color:#fff}
+.tab[aria-selected=true] em{background:rgba(255,255,255,.22);color:#fff}
+.panelx{overflow:hidden}
+.gh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 20px;padding:18px 24px;border-bottom:1px solid var(--line);background:var(--sand)}
+.gh p{margin:0;font-size:17px;color:var(--mute)}
+.tag{font-size:14px;font-weight:800;padding:6px 14px;border-radius:999px;white-space:nowrap}
+.tag.a{background:var(--active);color:var(--deep)}
+.tag.s{background:var(--btn);color:#fff}
+.tag.u{background:var(--deep);color:#fff}
+.cases{list-style:none;margin:0;padding:6px 24px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px}
+.cases li{padding:13px 0;border-bottom:1px solid var(--line);font-size:17px}
+.cases li span{display:block;font-size:15px;color:var(--soft);margin-top:2px}
+.chain{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.chain li{padding:22px;font-size:16.5px;color:var(--mute)}
+.chain em{font-style:normal;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--active);color:var(--deep);font-weight:800;font-size:15px;margin-bottom:12px}
+.chain b{display:block;font-size:19px;color:var(--ink);margin-bottom:4px}
+.how2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(24px,3.5vw,48px);align-items:start;margin-top:clamp(36px,5vw,56px)}
+.srcs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.srcs div{padding:18px 20px}
+.srcs b{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.srcs span{display:block;font-size:16px;font-weight:700;margin:2px 0 4px}
+.srcs p{font-size:15.5px;color:var(--mute);margin:0}
+.walk{padding:26px clamp(18px,2.4vw,30px)}
+.walk h3{margin-bottom:16px}
+.tl{list-style:none;margin:0 0 0 7px;padding:0;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:0 0 18px 24px;font-size:16.5px;color:var(--mute)}
+.tl li:last-child{padding-bottom:0}
+.tl li::before{content:"";position:absolute;left:-8px;top:8px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--gold)}
+.tl li b{color:var(--ink)}
+.say{display:block;margin:8px 0 0;padding:11px 15px;border-radius:12px 12px 12px 4px;background:var(--sand);color:var(--ink);font-size:16px}
+.say.out{border-radius:12px 12px 4px 12px;background:var(--active)}
+.more{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.deep{margin-top:clamp(36px,5vw,56px)}
+.deep>h3{margin-bottom:12px}
+.more>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;cursor:pointer;font-weight:700;font-size:18px}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary span{font-weight:500;font-size:15.5px;color:var(--soft);display:block}
+.more>summary .tog{display:inline-flex;align-items:center;gap:6px;flex:none;font-size:15px;font-weight:700;color:var(--btn);white-space:nowrap}
+.more>summary .tog span{display:inline;font-size:15px;font-weight:700;color:var(--btn)}
+.tog .ic{width:18px;height:18px;transition:transform .2s}
+.more[open] .tog .ic{transform:rotate(180deg)}
+.more[open] .t-o,.more:not([open]) .t-c{display:none}
+.more>summary:hover .tog{text-decoration:underline;text-underline-offset:4px}
+.more .mb{padding:0 22px 22px}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 14px;padding:14px 0;border-top:1px solid var(--line);font-size:16.5px;color:var(--mute)}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--active);color:var(--deep);font-weight:800;font-size:14px;display:grid;place-items:center}
+.steps b{color:var(--ink)}
+.scroll{overflow-x:auto}
+.arch svg{display:block;width:100%;min-width:780px;height:auto}
+.bx{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+.bxh{fill:var(--sand);stroke:var(--gold);stroke-width:1.5}
+.bxi{fill:var(--bg);stroke:var(--line)}
+.t1{font-size:16px;font-weight:800;fill:var(--ink)}
+.t2{font-size:13.5px;fill:var(--soft)}
+.t3{font-size:13.5px;fill:var(--ink)}
+.ar{stroke:var(--soft);stroke-width:1.5;fill:none}
+.ak{fill:var(--soft)}
+.al{font-size:13px;font-weight:700;fill:var(--btn);paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.grid3>div{padding:20px 22px}
+.grid3 p{margin:0;font-size:16px;color:var(--mute)}
+.grid3 .ic{color:var(--btn);margin-bottom:10px}
+.loop{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0;padding:0;list-style:none}
+.loop li{padding:22px;font-size:16.5px;color:var(--mute);position:relative}
+.loop li b{display:block;font-size:19px;color:var(--ink);margin-bottom:4px}
+.loop li:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:24px;width:12px;text-align:center;color:var(--soft)}
+.back{max-width:none;margin:12px 0 0;font-size:16px;color:var(--soft);border:1.5px dashed var(--line2);border-top:0;border-radius:0 0 14px 14px;padding:10px 16px 8px;text-align:center}
+.good{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:28px}
+.good div{padding:22px 24px}
+.good p{margin:0;color:var(--mute);font-size:17px}
+.rgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.rgrid div{border-top:1px solid var(--line);padding-top:20px}
+.rgrid b{display:block;font-size:clamp(48px,5.4vw,68px);font-weight:800;letter-spacing:-.045em;line-height:1}
+.rgrid h3{margin:12px 0 6px}
+.rgrid p{margin:0;font-size:16.5px;color:var(--mute)}
+.hand{display:flex;flex-wrap:wrap;gap:10px 32px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
+.hand span{font-size:16.5px;color:var(--mute)}
+.hand span::before{content:"✓ ";color:var(--btn);font-weight:800}
+.mine{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.crittbl td:first-child{white-space:normal;width:28%}
+.crittbl td:nth-child(2){color:var(--ink);width:30%}
+section[id],header[id]{scroll-margin-top:72px}
+.mine li{padding:20px 22px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 14px}
+.mine .ic{color:var(--btn);margin-top:3px}
+.mine b{display:block;font-size:18px}
+.mine span{color:var(--mute);font-size:16.5px}
+.callout{padding:26px 28px;border-left:4px solid var(--gold);margin-top:28px}
+.callout h3{margin-bottom:8px}
+.callout p{margin:0;color:var(--mute)}
+table{border-collapse:collapse;width:100%;font-size:16.5px}
+th{text-align:left;font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);padding:10px 18px 10px 0;border-bottom:1px solid var(--line)}
+td{padding:14px 18px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mute)}
+td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.cta{text-align:center}
+.cta h2{max-width:20ch;margin:0 auto}
+.cta p{margin:18px auto 30px;color:var(--mute);font-size:19px}
+.cta .acts{justify-content:center}
+footer{border-top:1px solid var(--line);padding:28px 0 40px;font-size:15px;color:var(--soft)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+@media(max-width:980px){.why6{grid-template-columns:repeat(2,minmax(0,1fr))}.two,.how2{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.chain,.grid3,.rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.loop{grid-template-columns:repeat(2,minmax(0,1fr))}.loop li:nth-child(2)::after{content:none}}
+@media(max-width:760px){nav.top .wrap{flex-wrap:wrap;height:auto;padding-top:10px;padding-bottom:4px;row-gap:2px}.logo{margin-right:auto}.links{order:3;flex:1 1 100%;margin:0 -12px;scrollbar-width:none}.links::-webkit-scrollbar{display:none}.links a{font-size:15px;padding:8px 12px;flex:none}section[id],header[id]{scroll-margin-top:110px}}
+@media(max-width:700px){.crit{grid-template-columns:minmax(0,1fr)}.decide3,.sw2,.why6{grid-template-columns:minmax(0,1fr)}.cases,.mine,.chain,.grid3,.rgrid,.dials,.good,.loop{grid-template-columns:minmax(0,1fr)}.loop li::after{content:none!important}}
+@media(max-width:640px){body{font-size:17px}.tblwrap{padding:4px 18px}.stack thead{display:none}.stack tr{display:grid;padding-block:12px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7.6em;white-space:normal}.stack td::before{content:attr(data-l);float:inline-start;width:7.2em;margin-inline-start:-7.6em;color:var(--soft);font-weight:600;font-size:14px}.cases{padding:4px 18px 8px}.gh{padding:16px 18px}.more>summary{padding:16px 18px}.more .mb{padding:0 18px 18px}}
+@media(max-width:440px){.tog span{display:none}.srcs{grid-template-columns:minmax(0,1fr)}.kpis{gap:10px}.kpi{padding:16px}.kpi b{font-size:30px}.kpi span{font-size:14.5px}.seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.seg button{white-space:normal;line-height:1.25;padding:8px 10px}}
+
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-net" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3M12 12V8"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+</svg>
+
+<nav class="top" aria-label="Page">
+  <div class="wrap">
+    <a class="logo" href="#top"><span>AI Guest Messaging</span></a>
+    <div class="links"><a href="#role">My role</a><a href="#problem">Problem</a><a href="#questions">Groundwork</a><a href="#how">How it works</a><a href="#hub">Knowledge Hub</a><a href="#results">Results</a></div>
+    <a class="b1 sm" href="https://www.linkedin.com/in/kien-han-3847502a0/">Contact</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Answering hundreds of guest messages a day, automatically</h1>
+    <p class="lead">The Salt Collections manages 60+ villas, serviced apartments and hotels. Staff used to answer hundreds of guest messages a day by hand. With one teammate, I built an AI system that answers the routine ones, asks guests for missing details, and hands everything else to a person.</p>
+    <div class="kpis">
+      <div class="card kpi"><b>300–400</b><span>guest messages a day, by hand before</span></div>
+      <div class="card kpi"><b>~80%</b><span>of replies sent without staff typing</span></div>
+      <div class="card kpi"><b>160,665</b><span>past messages analysed to build the knowledge</span></div>
+      <div class="card kpi"><b>124</b><span>test cases for checking reply quality</span></div>
+    </div>
+    <div class="card flow">
+      <div class="flowh"><b>How one guest message moves through the system</b></div>
+      <figure style="margin:0">
+        <div class="fig" id="flow"><svg role="img" aria-label="Guest messages flow through five steps: receive, collect, split, look up, draft and check. About 80% are sent automatically and about 20% go to staff, who add new answers to the Knowledge Hub."></svg></div>
+      </figure>
+    </div>
+    <div class="facts"><span><b>Role</b> Software Engineering Intern, AI &amp; Automation</span><span><b>Team</b> Me and one teammate</span><span><b>When</b> Built in my summer 2026 internship, still running well</span></div>
+  </div>
+</header>
+
+<section class="sand" id="role">
+  <div class="wrap">
+    <div class="sh"><p class="eyebrow">My role</p><h2>What I did</h2><p>I proposed the project and started with the data, not the code. Together with one teammate, I took it from an idea to a system the staff now run on their own.</p></div>
+    <ul class="mine">
+      <li class="card"><svg class="ic"><use href="#i-file"/></svg><div><b>Built the knowledge base</b><span>Analysed the full message history with Python and AI, pulled each property's facts from its listings, and organised every answer with the customer care team.</span></div></li>
+      <li class="card"><svg class="ic"><use href="#i-route"/></svg><div><b>Built the reply system with my teammate</b><span>Designed how each message is sorted, answered or handed to staff, rebuilt the pipeline in late July, and wrote many of the prompts.</span></div></li>
+      <li class="card"><svg class="ic"><use href="#i-pen"/></svg><div><b>Built the Knowledge Hub</b><span>The staff-owned system behind every answer, in English and Vietnamese: interface, server, permissions, checks and publishing.</span></div></li>
+      <li class="card"><svg class="ic"><use href="#i-users"/></svg><div><b>Handed it over</b><span>Trained three teams, wrote the guides they use, and left the system running without me.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<main>
+<section id="problem">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow">The problem</p>
+      <h2>One inbox, answered by hand, in the order messages arrived</h2>
+      <div class="story">
+        <p>Every guest message, from Airbnb, Agoda, Trip.com, Traveloka or Expedia, landed in one inbox. Staff answered them one by one, in the order they arrived, and that caused three problems.</p>
+        <p><b>Urgent messages waited.</b> A family locked out at night sat behind someone asking about checkout time, because nothing sorted the queue.</p>
+        <p><b>Simple answers were slow.</b> Every unit is different, so staff looked up the same facts again and again, or had to ask a manager.</p>
+        <p><b>Details were always missing.</b> An airport pickup needs a flight number, a time, the number of guests and bags, so staff chased each piece by message.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card queue" role="img" aria-label="Example inbox in arrival order, where an urgent lockout message is fifth in line">
+        <div class="qh">Example inbox, oldest first <span>6 waiting</span></div>
+        <div class="q"><time>21:58</time><span class="src">Airbnb</span><span>What time is checkout on Sunday?</span></div>
+        <div class="q"><time>22:01</time><span class="src">Agoda</span><span>Can we bring a small dog?</span></div>
+        <div class="q"><time>22:03</time><span class="src">Airbnb</span><span>Is the pool heated?</span></div>
+        <div class="q"><time>22:04</time><span class="src">Trip.com</span><span>Can you arrange a car to the airport?</span></div>
+        <div class="q urg"><time>22:06</time><span class="src">Airbnb</span><span>The door code isn't working. We have two kids with us and it's raining.</span><b>Urgent, but fifth in line</b></div>
+        <div class="q"><time>22:07</time><span class="src">Expedia</span><span>Is there a hair dryer?</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sand" id="questions">
+  <div class="wrap">
+    <div class="sh"><p class="eyebrow">The groundwork</p><h2>Before automating anything, I built the knowledge it would answer from</h2><p>There was no single place that held the answers. Each property's facts sat in its Airbnb listing, and how to answer each question lived in the heads of the customer care team. So I built that database first.</p><p>I started with the data: 160,665 past messages between guests and staff. Using Python and pandas, I cleaned them and paired them into 43,997 question-and-answer exchanges, then used AI to classify and read through them, so I knew what guests actually ask and how often. I pulled each property's basic facts out of its listings and put them all in one place, in the same format for every property. Then I worked closely with the customer care team to write down how they answer each question and to reorganise everything they knew into one structure. In the end, all of that came down to 307 approved answers and request flows.</p><p>To know what to do with a message, the system needed three things about it, so I sorted questions by three criteria. Each criterion splits them differently, and every question gets a label from all three.</p></div>
+
+    <div class="card tblwrap"><table class="stack crittbl">
+      <thead><tr><th>The question</th><th>Categories</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td>What kind of answer is it?</td><td>Request (41), Shared Answer (45), Property Answer (221)</td><td>Tells the system whether to ask the guest for details, fill in a template, or look up one property's own answer.</td></tr>
+        <tr><td>Can it go out without a person?</td><td>Automatic, or human review</td><td>A wrong automatic answer about a refund or a free room costs far more than a slow one.</td></tr>
+        <tr><td>Who may receive it?</td><td>Anyone, or booked guests only</td><td>Addresses, wifi details and door codes are a security risk in the wrong hands.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="sum card">
+      <p><b>Three criteria, seven categories.</b> Because the criteria are independent, one flat list of categories would not have worked. "What's the wifi password?" and "I'm locked out" are both Shared Answers for booked guests, yet one goes out automatically and the other always goes straight to a person.</p>
+    </div>
+
+    <details class="more" style="margin-top:18px"><summary><div>How I modelled the knowledge<span>Each criterion explained, with the reasoning and an example</span></div><span class="tog"><span class="t-o">Show details</span><span class="t-c">Hide details</span><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="mb">
+    <div class="crit card">
+      <div class="ck"><span class="axn">1</span><b>What kind of answer is it?</b><small>3 categories</small></div>
+      <div class="story">
+        <p>Some questions can't be answered until the guest tells us more. Those became <b>Requests</b> (41 of them): the bot keeps asking for whatever is missing, then hands the case to a person. Questions whose answer is the same at every property, with only a fact like the wifi password or the address changing, became <b>Shared Answers</b> (45): one template, filled with each unit's own facts. Anything genuinely different from building to building became a <b>Property Answer</b> (221), written in full for that property.</p>
+        <p><b>Why:</b> it tells the bot whether to ask, fill in or look up, and staff fix a shared answer once instead of once per unit. For example, the wifi password is a Shared Answer, the gym's opening hours are a Property Answer, and early check-in is a Request.</p>
+      </div>
+    </div>
+
+    <div class="crit card">
+      <div class="ck"><span class="axn">2</span><b>Can it go out without a person?</b><small>2 categories</small></div>
+      <div class="story">
+        <p>Stable, verified answers are sent <b>automatically</b>. Anything involving money, availability, exceptions or a judgment call goes to <b>human review</b> first.</p>
+        <p><b>Why:</b> a wrong automatic answer about a refund or a free room costs far more than a slow one. For example, the pet policy goes out instantly, while an early check-in request always ends with staff, because only they know whether the room will be ready.</p>
+      </div>
+    </div>
+
+    <div class="crit card">
+      <div class="ck"><span class="axn">3</span><b>Who may receive it?</b><small>2 categories</small></div>
+      <div class="story">
+        <p>The same inbox serves people still deciding whether to book and people who already have. Most answers are fine for <b>anyone</b>; anything with an address, wifi details, a door code or entry steps is for <b>booked guests only</b>.</p>
+        <p><b>Why:</b> those details are a security risk in the wrong hands. For example, anyone can learn the pet policy; only a booked guest gets the wifi password.</p>
+      </div>
+    </div>
+    </div></details>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sh"><p class="eyebrow">How it works</p><h2>Finding the right answer, then deciding if it may go out</h2><p>Once every answer had its labels, the system's job was clear: work out what the guest needs, check what this guest is allowed to see, then reply, ask for what's missing, or pass it to staff. Technically this is retrieval-augmented generation (RAG): the AI looks something up before it writes. What it looks up is the answers staff wrote and approved, and, for information questions that match none of them, the property's own facts.</p></div>
+    <div class="qask"><span class="say">Is there parking at the villa?</span></div>
+    <ol class="loop">
+      <li class="card"><b>1. Search</b>Finds the three closest of 880 ways guests have asked before, like "Do you have parking?" or "Where can I leave the scooter?"</li>
+      <li class="card"><b>2. Check</b>A second AI step decides which one really means the same thing, or rejects all three. Similar wording isn't always the same question.</li>
+      <li class="card"><b>3. Look up</b>Pulls the parking answer written for this villa, and checks the booking before using anything private.</li>
+      <li class="card"><b>4. Route</b>Sends it, asks for what's missing, or hands it to staff, depending on the answer's labels.</li>
+    </ol>
+    <p class="after read"><b>The rule for questions that match nothing came from a mistake.</b> At first, when a question fell outside the database, the AI still wrote an answer, and sometimes it simply made one up. A confident wrong answer is worse than a slow one, so I took that freedom away. Now an information question that matches nothing can only be answered from the basic facts staff keep for that property. If those can't answer it safely, or the message needs a person's judgement, it goes to staff.</p>
+    <div class="walk2">
+      <h3>Example: a request that takes three messages</h3>
+      <p class="lede">A question needs one answer. A pickup needs details that arrive over several messages, so the system keeps the request open and tracks what it already knows. Once the required details are in, it hands the request to staff. If the guest can't give them or needs help, it hands over earlier.</p>
+      <div class="card tblwrap"><table class="stack wftbl">
+        <thead><tr><th>The guest writes</th><th>What the system does</th><th>The pickup request</th></tr></thead>
+        <tbody>
+          <tr><td><span class="say">Hi! We land at 23:40 tomorrow, can someone pick us up? also is the tap water ok to drink</span></td><td>Splits it into a question and a request. Answers the water question and asks only for the missing details.</td><td><b>Opened</b>Has the arrival time. Still needs the flight number, number of guests and bags.</td></tr>
+          <tr><td><span class="say">Flight VN123, there are 4 of us</span></td><td>Adds this to the open request instead of treating it as a new conversation, and asks for what's left.</td><td><b>Still collecting</b>Still needs the number of bags.</td></tr>
+          <tr><td><span class="say">2 big suitcases</span></td><td>Sees the request is complete.</td><td><b>Handed to staff</b>Staff get every detail in one email and book the driver.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card callout read"><h3>What if the guest writes again while a reply is being prepared?</h3><p>Guests often add a second message a few seconds later. Before sending anything, the system checks whether a newer message has arrived. If it has, it drops the reply it was about to send and handles the newer message instead, so the guest doesn't get an answer to a question they've already changed.</p></div>
+
+    <div class="deep">
+      <h3>Technical deep dive</h3>
+      <p style="color:var(--mute);font-size:17px;margin:0 0 14px">For anyone who wants the engineering detail. Open only the parts you care about.</p>
+      <details class="more"><summary><div>The full 9-step pipeline<span>What happens to a message from the moment it arrives until a reply goes out</span></div><span class="tog"><span class="t-o">Show details</span><span class="t-c">Hide details</span><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="mb"><ol class="steps">
+        <li><span><b>Receive.</b> Hostex, the tool that collects messages from every booking site, forwards each new message to our service. We save it, confirm within three seconds, and ignore duplicates.</span></li>
+        <li><span><b>Group.</b> Guests often send several short messages in a row, so we wait until they stop typing and treat the burst as one turn.</span></li>
+        <li><span><b>Check access.</b> We check whether the guest has a confirmed booking, which decides the property details their reply may use.</span></li>
+        <li><span><b>Split.</b> The AI separates the turn into questions, requests and small talk. Photos go straight to staff.</span></li>
+        <li><span><b>Answer each item.</b> Questions go through the search above, or, for information questions that match nothing, the property's facts. Requests ask only for what's still missing, and troubleshooting checks whether the guest's problem is fixed.</span></li>
+        <li><span><b>Combine.</b> Safe answers become one reply. If anything involves safety, payments, refunds, legal issues or access, the whole conversation goes to staff as urgent.</span></li>
+        <li><span><b>Polish and check.</b> The AI warms up the tone, then a final check confirms the reply answers the guest, sticks to its source and is safe. If only the polishing changed the meaning, the original wording is sent instead; if the content itself fails, the reply goes to staff. Replies are written in the guest's language.</span></li>
+        <li><span><b>Send or hand over.</b> Before sending, we make sure the guest hasn't written again. Anything for staff is emailed with the context and a suggested reply.</span></li>
+        <li><span><b>Hand back.</b> When staff reply themselves, the AI steps back. It resumes after 15 quiet minutes, and after two hours staff get an email to keep it off or turn it back on.</span></li>
+      </ol></div></details>
+      <details class="more"><summary><div>System map<span>How the booking sites, the reply service, the AI models, the database and the Knowledge Hub connect</span></div><span class="tog"><span class="t-o">Show details</span><span class="t-c">Hide details</span><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="mb scroll arch">
+        <svg viewBox="0 0 1000 480" role="img" aria-label="System map: guests reach Hostex; Hostex calls the reply service on Render; the reply service uses the OpenAI API and Supabase Postgres, sends replies back through Hostex, and emails staff; staff reply in Hostex and maintain answers in the Knowledge Hub, which publishes to the same database.">
+          <defs><marker id="m1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="ak" d="M0 0L8 4L0 8z"/></marker></defs>
+          <rect class="bx" x="20" y="150" width="125" height="170" rx="10"/><text class="t1" x="36" y="180">Guests</text>
+          <text class="t3" x="36" y="208">Airbnb</text><text class="t3" x="36" y="230">Agoda</text><text class="t3" x="36" y="252">Trip.com</text><text class="t3" x="36" y="274">Traveloka</text><text class="t3" x="36" y="296">Expedia</text>
+          <rect class="bx" x="185" y="185" width="150" height="100" rx="10"/><text class="t1" x="201" y="222">Hostex</text><text class="t2" x="201" y="246">channel manager,</text><text class="t2" x="201" y="266">system of record</text>
+          <rect class="bxh" x="410" y="105" width="280" height="258" rx="12"/><text class="t1" x="428" y="135">Reply service</text><text class="t2" x="672" y="135" text-anchor="end">FastAPI on Render</text>
+          <rect class="bxi" x="428" y="150" width="244" height="34" rx="6"/><text class="t3" x="442" y="172">Webhook + durable ingest</text>
+          <rect class="bxi" x="428" y="192" width="244" height="34" rx="6"/><text class="t3" x="442" y="214">Turn worker</text>
+          <rect class="bxi" x="428" y="234" width="244" height="34" rx="6"/><text class="t3" x="442" y="256">RAG pipeline, 9 steps</text>
+          <rect class="bxi" x="428" y="276" width="244" height="34" rx="6"/><text class="t3" x="442" y="298">Cron: timeouts, every 5 min</text>
+          <rect class="bxi" x="428" y="318" width="244" height="34" rx="6"/><text class="t3" x="442" y="340">Cron: history cleanup, daily</text>
+          <rect class="bx" x="760" y="25" width="220" height="118" rx="10"/><text class="t1" x="778" y="54">OpenAI API</text><text class="t2" x="778" y="78">GPT-5.6 Luna: split, classify</text><text class="t2" x="778" y="98">GPT-4o mini: write replies</text><text class="t2" x="778" y="118">text-embedding-3-small</text>
+          <rect class="bx" x="760" y="172" width="220" height="156" rx="10"/><text class="t1" x="778" y="201">Supabase Postgres</text><text class="t2" x="778" y="223">with pgvector</text><text class="t3" x="778" y="250">human: facts, phrasings,</text><text class="t3" x="778" y="268">templates, FAQs, requests</text><text class="t3" x="778" y="292">generated: messages, turns,</text><text class="t3" x="778" y="310">drafts, audit log</text>
+          <rect class="bxh" x="760" y="368" width="220" height="96" rx="12"/><text class="t1" x="778" y="397">Knowledge Hub</text><text class="t2" x="778" y="421">React + FastAPI on Vercel</text><text class="t2" x="778" y="441">staff edit and publish</text>
+          <rect class="bx" x="410" y="400" width="260" height="64" rx="10"/><text class="t1" x="428" y="427">Staff</text><text class="t2" x="428" y="450">review emails with signed links</text>
+          <path class="ar" d="M145 235H183" marker-end="url(#m1)"/>
+          <path class="ar" d="M335 215H408" marker-end="url(#m1)"/><text class="al" x="372" y="206" text-anchor="middle">webhook</text>
+          <path class="ar" d="M410 258H337" marker-end="url(#m1)"/><text class="al" x="372" y="277" text-anchor="middle">API send</text>
+          <path class="ar" d="M690 125H758" marker-end="url(#m1)"/><text class="al" x="724" y="116" text-anchor="middle">JSON</text>
+          <path class="ar" d="M690 245H758" marker-start="url(#m1)" marker-end="url(#m1)"/><text class="al" x="724" y="236" text-anchor="middle">asyncpg</text>
+          <path class="ar" d="M870 368V330" marker-end="url(#m1)"/><text class="al" x="880" y="354">publish</text>
+          <path class="ar" d="M550 363V398" marker-end="url(#m1)"/><text class="al" x="560" y="386">review</text>
+          <path class="ar" d="M410 432H260V287" marker-end="url(#m1)"/><text class="al" x="335" y="424" text-anchor="middle">manual reply</text>
+          <path class="ar" d="M670 432H758" marker-end="url(#m1)"/><text class="al" x="714" y="424" text-anchor="middle">new answers</text>
+        </svg>
+      </div></details>
+      <details class="more"><summary><div>Privacy and safety<span>How guest data and private details are protected</span></div><span class="tog"><span class="t-o">Show details</span><span class="t-c">Hide details</span><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="mb"><div class="grid3">
+        <div class="card"><svg class="ic"><use href="#i-lock"/></svg><p>Booking status is checked before restricted property details, such as an address or wifi password, are used in a reply.</p></div>
+        <div class="card"><svg class="ic"><use href="#i-shield"/></svg><p>Emergencies, payments, refunds, legal issues and access problems stop all automatic sending for that conversation.</p></div>
+        <div class="card"><svg class="ic"><use href="#i-file"/></svg><p>Private details are hidden in the system's logs, and conversations are deleted seven days after checkout.</p></div>
+        <div class="card"><svg class="ic"><use href="#i-link"/></svg><p>Links in staff emails can't be tampered with, and each on/off button works for one conversation only.</p></div>
+        <div class="card"><svg class="ic"><use href="#i-users"/></svg><p>Staff accounts use two-factor sign-in, and the data is backed up with a written recovery plan.</p></div>
+        <div class="card"><svg class="ic"><use href="#i-net"/></svg><p>If the AI fails or returns something malformed, the message goes to a person instead of out as a guess.</p></div>
+      </div></div></details>
+      <details class="more"><summary><div>Models, prompts and the full stack<span>Which AI model does which job, and the tools behind everything</span></div><span class="tog"><span class="t-o">Show details</span><span class="t-c">Hide details</span><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="mb">
+        <p style="color:var(--mute);font-size:16.5px">A stronger model (GPT-5.6 Luna) does the hard part: understanding and sorting each message. A cheaper one (GPT-4o mini) writes the reply from the facts we give it, and a small embedding model powers the search. Each of the eleven prompts has one job, the AI must answer in a fixed format so bad output is easy to catch, and the cost of every call is logged.</p>
+        <table class="stack">
+          <thead><tr><th>Part</th><th>Tools</th></tr></thead>
+          <tbody>
+            <tr><td>Reply service</td><td>Python, FastAPI, Pydantic v2, httpx, tenacity, Jinja2; Render web service and two cron jobs</td></tr>
+            <tr><td>Data and retrieval</td><td>Supabase Postgres, pgvector, asyncpg with plain SQL, versioned migrations</td></tr>
+            <tr><td>Knowledge Hub</td><td>React 18, TypeScript, Vite 6, FastAPI, PyJWT; Vercel</td></tr>
+            <tr><td>Integrations</td><td>Hostex webhooks and API, Gmail for staff email</td></tr>
+            <tr><td>Testing</td><td>pytest, recorded Hostex fixtures, evaluation sets</td></tr>
+            <tr><td>Back office</td><td>n8n, Google Apps Script</td></tr>
+          </tbody>
+        </table>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<section class="sand" id="hub">
+  <div class="wrap">
+    <div class="sh"><p class="eyebrow">Knowledge Hub</p><h2>Handing the knowledge to the people who own it</h2></div>
+    <div class="story read">
+      <p>The system is only as good as what it retrieves, and the facts keep changing: a new unit, a new house rule, a broken air conditioner. My internship was going to end, and guests weren't going to stop asking. So I built the Knowledge Hub: a knowledge system the staff own, where they manage every answer the AI uses without touching code. The database I'd put together with the customer care team moved into it, and now they keep it up to date themselves.</p>
+      <p>Staff file each answer using the same three criteria and save it as a draft; a manager reviews it and publishes. The Hub refuses to save a public answer that contains an address, a password or a link, so the safety rule doesn't depend on anyone remembering it. Every edit is tied to a named account, and the whole interface works in English and Vietnamese. Behind the screens, the server enforces what each role may do, warns when someone edits an answer that changed since they opened it, and marks any search update that fails so it can be retried.</p>
+    </div>
+    <figure class="hubfig" role="img" aria-label="Reconstruction of the Knowledge Hub editing screen, with sample data">
+      <h3>The Knowledge Hub, rebuilt with sample data</h3>
+      <div class="mock" inert>
+        <div class="m-top"><b>Knowledge Hub</b><span class="m-tabs"><span class="on">Property answers</span><span>Shared answers</span><span>Requests</span><span>Properties</span></span><span class="m-user">Editor</span></div>
+        <div class="m-body">
+          <div class="m-list">
+            <div class="m-search">Search answers</div>
+            <div class="m-row on"><span>Is there parking?</span><i class="chip draft">Draft</i></div>
+            <div class="m-row"><span>Pool opening hours</span><i class="chip pub">Published</i></div>
+            <div class="m-row"><span>Can we have a BBQ?</span><i class="chip pub">Published</i></div>
+            <div class="m-row"><span>Is there a hair dryer?</span><i class="chip pub">Published</i></div>
+          </div>
+          <div class="m-edit">
+            <div class="m-h"><b>Is there parking?</b><span>Sample Villa 1</span></div>
+            <div class="m-lab">Answer</div>
+            <div class="m-field">Yes, there's free parking for two cars right in front of the villa, at <mark>12 Sample Street</mark>. The gate remote is in the kitchen drawer.<i class="mk">1</i></div>
+            <div class="m-lab">Labels</div>
+            <div class="m-tags"><span>Property Answer</span><span>Automatic</span><span>Anyone</span></div>
+            <div class="m-warn">A public answer can't include an address. Remove it, or make this answer visible to booked guests only.<i class="mk">2</i></div>
+            <div class="m-btns"><small>Only a manager can publish</small><span class="b2">Save draft</span><span class="b1">Publish</span><i class="mk">3</i></div>
+          </div>
+        </div>
+      </div>
+    </figure>
+    <ol class="loop">
+      <li class="card"><b>1. Edit</b>A staff member updates an answer or a property's facts and saves it as a draft.</li>
+      <li class="card"><b>2. Check</b>The Hub blocks anything unsafe, like an address inside a public answer.</li>
+      <li class="card"><b>3. Publish</b>A manager reviews the draft and publishes it.</li>
+      <li class="card"><b>4. Use</b>The search updates, and the next guest who asks gets the new answer.</li>
+    </ol>
+    <details class="more" style="margin-top:18px"><summary><div>How it's built and kept safe<span>The tools behind the Hub, and how it protects the data</span></div><span class="tog"><span class="t-o">Show details</span><span class="t-c">Hide details</span><svg class="ic"><use href="#i-down"/></svg></span></summary><div class="mb"><ul style="margin:0;padding-left:20px;color:var(--mute);font-size:16.5px">
+      <li>React and TypeScript on the front, Python (FastAPI) behind it, hosted on Vercel; 26 API endpoints and 73 automated tests.</li>
+      <li>Publishing an answer updates the search automatically, with a retry button if that fails.</li>
+      <li>The Hub and the reply service each get only the database access they need, and old versions can't be edited.</li>
+      <li>Every database change comes with a way to undo it and is tested on a copy first.</li>
+      <li>Nothing is deleted outright: properties are archived and can be restored, and every change is logged.</li>
+    </ul></div></details>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap">
+    <div class="sh"><p class="eyebrow">Results</p><h2>Four in five replies, sent without anyone typing</h2><p>In the first two months, about 80% of replies to guests went out automatically. That's our own operational estimate, not a controlled study. What matters more is that each of the three problems from the start now has an answer.</p></div>
+    <div class="story read" style="margin-bottom:clamp(32px,4vw,48px)">
+      <p><b>Urgent messages no longer wait.</b> A message about a lockout, a payment or a safety issue goes straight to staff, marked urgent, instead of sitting behind questions about checkout time.</p>
+      <p><b>Simple answers go out on their own.</b> Questions about checkout times, pool hours or hair dryers are answered from what staff already approved, so nobody looks up the same fact twice.</p>
+      <p><b>Requests reach staff complete.</b> For a pickup, the system asks the guest for the flight details and the number of guests and bags, so staff get a request they can book straight away.</p>
+    </div>
+    <div class="rgrid">
+      <div><b>~80%</b><h3>sent automatically</h3><p>The other 20% reached staff with the reason and a suggested draft.</p></div>
+      <div><b>124</b><h3>evaluation cases</h3><p>Real recurring questions, each with what a correct reply must and must not say.</p></div>
+      <div><b>48</b><h3>test files</h3><p>Automated tests for the reply service.</p></div>
+      <div><b>73</b><h3>tests</h3><p>Automated tests for the Knowledge Hub.</p></div>
+    </div>
+    <div class="card callout read" style="margin:36px 0 28px"><h3>Tested for booking-sensitive information</h3><p>A guest who hasn't booked asks for the villa's address. Unit tests cover how the system handles that restricted request, and check that the address can be used once the booking is confirmed.</p></div>
+    <div class="hand"><span>Still running, maintained by staff</span><span>Cost: hosting plus model tokens</span><span>Training in Vietnamese and English</span><span>Written guides and an AI workshop for staff</span></div>
+  </div>
+</section>
+
+<section class="sand" id="me">
+  <div class="wrap">
+    <div class="sh"><p class="eyebrow">Handover</p><h2>Built to keep running after I left</h2></div>
+    <div class="story read">
+      <p>A system that only one person understands stops working when that person leaves. So the last part of my work was making sure the team could run it without me. I trained the customer service, marketing and operations teams in Vietnamese and English, wrote the guides they use, and set up staff accounts and backups.</p>
+      <p>Today the staff keep the answers up to date themselves through the Knowledge Hub, and the system is still running. None of it was a solo effort: my teammate and I designed it together and worked through every major decision side by side.</p>
+    </div>
+    <div class="card callout read"><h3>What I'd do differently</h3><p>The system works, but it could be leaner. Each time, it gives the AI a fixed window of recent messages, the last six when splitting a turn, whether or not they matter to the new question. If I built it again, I'd choose the context by relevance instead: the earlier messages tied to the current question and any request still open. Then I'd measure whether that really saves tokens without losing anything important, because choosing the context has a cost of its own.</p></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Want the full walk-through?</h2>
+    <p>The code is private client work, but I'm happy to go through it in an interview.</p>
+    <div class="acts"><a class="b1" href="https://www.linkedin.com/in/kien-han-3847502a0/">Connect on LinkedIn <svg class="ic"><use href="#i-ext"/></svg></a><a class="b2" href="https://github.com/kh268">More on GitHub <svg class="ic"><use href="#i-ext"/></svg></a></div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>Quang Kien Han, Minerva University class of 2029</span><span>Case study of my summer 2026 internship at The Salt Collections</span></div></footer>
+
+<script>
+{
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const fig=document.getElementById('flow');
+const svg=fig.querySelector('svg');
+const names=['Receive','Collect','Split','Look up','Draft + check'];
+const longNames=['Receive from Hostex','Collect into one turn','Split into questions','Look up answers','Draft and check'];
+const chans=['Airbnb','Agoda','Trip.com','Traveloka','Expedia'];
+const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const defs='<defs><marker id="af" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path class="mkr" d="M0 0L8 4L0 8z"/></marker><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path class="mks" d="M0 0L8 4L0 8z"/></marker></defs>';
+const dot=(p,b)=>still?'':`<circle r="4" class="dt"><animateMotion dur="7s" repeatCount="indefinite" begin="${b}s" path="${p}"/></circle>`;
+let lastW=0;
+const draw=()=>{
+  const W=Math.round(fig.clientWidth);
+  if(!W||W===lastW)return;
+  lastW=W;
+  let h='',H;
+  if(W>=800){
+    H=330;
+    const cy=145,bh=56,x0=134,xs=W-280,t1=bh*.8,t2=bh*.2,ct=cy-72,cb=cy+62,yt=cy-bh/2,yb=cy+bh/2;
+    const base=names.map(s=>s.length*8.6+26),extra=Math.max(0,(xs-x0-base.reduce((a,b)=>a+b,0))/names.length);
+    let x=x0;
+    const seg=base.map(w=>{const a=x;x+=w+extra;return[a,x]});
+    chans.forEach((c,i)=>{const y=cy-84+i*35,ty=yt+(i+.5)*bh/5;
+      h+=`<path class="ln" d="M100 ${y+14}C120 ${y+14} 116 ${ty} ${x0} ${ty}" stroke-width="1.5"/><rect class="ln" x=".75" y="${y}" width="99" height="28" rx="14" stroke-width="1.5"/><text x="50" y="${y+19}" text-anchor="middle" class="chx">${c}</text>`;});
+    h+=`<rect class="rv" x="${x0}" y="${yt}" width="${xs-x0}" height="${bh}"/>`;
+    h+=`<path class="rv" d="M${xs} ${yt}C${xs+60} ${yt} ${xs+60} ${ct-t1/2} ${xs+120} ${ct-t1/2}H${W}V${ct+t1/2}H${xs+120}C${xs+60} ${ct+t1/2} ${xs+60} ${yt+t1} ${xs} ${yt+t1}Z"/>`;
+    h+=`<path class="sf" d="M${xs} ${yb-t2}C${xs+60} ${yb-t2} ${xs+60} ${cb-t2/2} ${xs+120} ${cb-t2/2}H${W}V${cb+t2/2}H${xs+120}C${xs+60} ${cb+t2/2} ${xs+60} ${yb} ${xs} ${yb}Z"/>`;
+    seg.forEach(([a,b],i)=>{
+      if(i)h+=`<line class="gate" x1="${a}" y1="${yt}" x2="${a}" y2="${yb}"/>`;
+      h+=`<text x="${(a+b)/2}" y="${cy+5}" text-anchor="middle" class="st">${names[i]}</text>`;});
+    const x3=(seg[3][0]+seg[3][1])/2,ky=cy+128;
+    h+=`<rect class="khb" x="${x3-76}" y="${ky}" width="152" height="38" rx="8"/><text x="${x3}" y="${ky+24}" text-anchor="middle" class="kh">Knowledge Hub</text>`;
+    h+=`<line class="up" x1="${x3}" y1="${ky}" x2="${x3}" y2="${yb+7}" marker-end="url(#af)"/>`;
+    h+=`<path class="lp" d="M${xs+70} ${cb+t2/2}V${ky+9}Q${xs+70} ${ky+19} ${xs+60} ${ky+19}H${x3+85}" marker-end="url(#ah)"/>`;
+    h+=`<text x="${(x3+76+xs+70)/2}" y="${ky+11}" text-anchor="middle" class="sm">new answers added</text>`;
+    h+=`<text x="${W}" y="${ct-t1/2-14}" text-anchor="end"><tspan class="big">80%</tspan><tspan class="sm" dx="8">sent automatically</tspan></text>`;
+    h+=`<text x="${W}" y="${cb+t2/2+38}" text-anchor="end"><tspan class="big2">20%</tspan><tspan class="sm" dx="8">to staff</tspan></text>`;
+    const pa=`M${x0} ${yt+t1/2}H${xs}C${xs+60} ${yt+t1/2} ${xs+60} ${ct} ${xs+120} ${ct}H${W}`,ps=`M${x0} ${yb-t2/2}H${xs}C${xs+60} ${yb-t2/2} ${xs+60} ${cb} ${xs+120} ${cb}H${W}`;
+    [0,-1.75,-3.5,-5.25].forEach(b=>h+=dot(pa,b));
+    h+=dot(ps,-2.6);
+  }else{
+    const bx=2,bw=46,sh=52,ys=sh*names.length,t1=bw*.8,t2=bw*.2,yb=ys+46;
+    const kx=bx+t1+40,kw=Math.min(260,Math.max(140,W-28-kx)),ky=yb+44,kh=40,ly=3*sh+sh/2,le=bx+bw+14+longNames[3].length*8.4+12;
+    H=ky+kh+86;
+    h+=`<rect class="rv" x="${bx}" y="0" width="${bw}" height="${ys}"/><rect class="rv" x="${bx}" y="${ys}" width="${t1}" height="${H-ys}"/>`;
+    h+=`<path class="sf" d="M${bx+t1} ${ys}H${bx+bw}C${bx+bw} ${ys+22} ${bx+bw+18} ${yb-t2/2} ${bx+bw+46} ${yb-t2/2}H${W}V${yb+t2/2}H${bx+bw+46}C${bx+t1+14} ${yb+t2/2} ${bx+t1} ${ys+30} ${bx+t1} ${ys}Z"/>`;
+    longNames.forEach((s,i)=>{
+      if(i)h+=`<line class="gate" x1="${bx}" y1="${i*sh}" x2="${bx+bw}" y2="${i*sh}"/>`;
+      h+=`<text x="${bx+bw+14}" y="${i*sh+sh/2+5}" class="stv">${s}</text>`;});
+    h+=`<text x="${bx+bw+60}" y="${yb-t2/2-12}"><tspan class="big2">20%</tspan><tspan class="sm" dx="8">to staff</tspan></text>`;
+    h+=`<path class="lp" d="M${kx+kw/2} ${yb+t2/2}V${ky-3}" marker-end="url(#ah)"/>`;
+    h+=`<rect class="khb" x="${kx}" y="${ky}" width="${kw}" height="${kh}" rx="8"/><text x="${kx+kw/2}" y="${ky+25}" text-anchor="middle" class="kh">Knowledge Hub</text>`;
+    h+=`<path class="lp" d="M${kx+kw} ${ky+kh/2}H${W-8}V${ly-5}H${le}" marker-end="url(#ah)"/>`;
+    h+=`<text x="${W-14}" y="${ky+kh+22}" text-anchor="end" class="sm">new answers added</text>`;
+    h+=`<text x="${bx+t1+16}" y="${H-14}"><tspan class="big">80%</tspan><tspan class="sm" dx="8">sent automatically</tspan></text>`;
+    const pa=`M${bx+t1/2} 0V${H}`,ps=`M${bx+bw-t2/2} 0V${ys}C${bx+bw-t2/2} ${ys+24} ${bx+bw+18} ${yb} ${bx+bw+46} ${yb}H${W}`;
+    [0,-1.75,-3.5,-5.25].forEach(b=>h+=dot(pa,b));
+    h+=dot(ps,-2.6);
+  }
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  fig.style.height=H+'px';
+  svg.innerHTML=defs+h;
+};
+const ro=new ResizeObserver(draw);
+ro.observe(fig);
+draw();
+}
+</script>
+</body>
+</html>
